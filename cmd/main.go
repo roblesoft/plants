@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
-	"github.com/roblesoft/book-api/pkg/common/db"
+	"github.com/roblesoft/plants/pkg/plants"
+	"github.com/roblesoft/plants/pkg/common/db"
 	"github.com/spf13/viper"
 )
 
@@ -14,14 +17,14 @@ func main() {
 	dbUrl := viper.Get("DB_URL").(string)
 
 	r := gin.Default()
-	db.Init(dbUrl)
+	h := db.Init(dbUrl)
 
 	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"port":  port,
-			"dbUrl": dbUrl,
-		})
+		fmt.Printf("%d variable", 500)
+		c.Writer.WriteHeader(200)
 	})
+	
+    plants.RegisterRoutes(r, h)
 
 	r.Run(port)
 }

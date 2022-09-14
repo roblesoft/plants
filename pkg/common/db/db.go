@@ -3,7 +3,7 @@ package db
 import (
 	"log"
 
-	"github.com/roblesoft/book-api/pkg/common/models"
+	"github.com/roblesoft/plants/pkg/common/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

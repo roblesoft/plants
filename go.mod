@@ -1,4 +1,4 @@
-module github.com/roblesoft/book-api
+module github.com/roblesoft/plants
 
 go 1.18
 
