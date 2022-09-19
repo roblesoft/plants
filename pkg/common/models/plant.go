@@ -13,7 +13,9 @@ type Plant struct {
 	PlantClass string `json:"plant_class"`
 }
 
+type PlantCollection []*Plant
+
 func (p *Plant) FullInformation() string {
 	return fmt.Sprintf("Name: %s\n, Family: %s\n, Plant class: %s",
-	                   p.CommonName, p.Family, p.PlantClass)
+		p.CommonName, p.Family, p.PlantClass)
 }
