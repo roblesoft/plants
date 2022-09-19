@@ -37,12 +37,12 @@ func InitServer() *Server {
 	return &Server{router: gin.Default()}
 }
 
-func (s *Server) Run() (err error) {
+func (s *Server) Run(port string) (err error) {
 	s.registerRoutes()
 
 	s.router.Use(gzip.Gzip(gzip.DefaultCompression))
 
-	err = s.router.Run()
+	err = s.router.Run(port)
 	return
 }
 

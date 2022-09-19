@@ -14,7 +14,7 @@ func main() {
 	viper.ReadInConfig()
 	logger, _ := zap.NewDevelopment()
 
-	// port := viper.Get("PORT").(string)
+	port := viper.Get("PORT").(string)
 	dbUrl := viper.Get("DB_URL").(string)
 
 	db := db.Init(dbUrl)
@@ -27,5 +27,5 @@ func main() {
 	server := controllers.InitServer()
 	server.SetRepositoryRegistry(registry)
 	server.SetLogger(logger)
-	server.Run()
+	server.Run(port)
 }
