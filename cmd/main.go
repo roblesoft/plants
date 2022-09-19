@@ -1,37 +1,31 @@
 package main
 
 import (
-	"fmt"
+	"go.uber.org/zap"
 
-	"github.com/gin-gonic/gin"
 	"github.com/roblesoft/plants/pkg/common/db"
 	"github.com/roblesoft/plants/pkg/common/repository"
-	"github.com/roblesoft/plants/pkg/controllers/plants"
+	"github.com/roblesoft/plants/pkg/controllers"
 	"github.com/spf13/viper"
 )
 
 func main() {
 	viper.SetConfigFile("./pkg/common/envs/.env")
 	viper.ReadInConfig()
+	logger, _ := zap.NewDevelopment()
 
-	port := viper.Get("PORT").(string)
+	// port := viper.Get("PORT").(string)
 	dbUrl := viper.Get("DB_URL").(string)
 
-	r := gin.Default()
-	h := db.Init(dbUrl)
+	db := db.Init(dbUrl)
 
-	r.GET("/", func(c *gin.Context) {
-		fmt.Printf("%d variable", 500)
-		c.Writer.WriteHeader(200)
-	})
-
-	plants.RegisterRoutes(r, h)
 	registry := repository.NewRepositoryRegistry(
-		h,
+		db,
 		&repository.PlantRepository{},
 	)
 
-	plants.SetRepositoryRegistry(r, registry)
-
-	r.Run(port)
+	server := controllers.InitServer()
+	server.SetRepositoryRegistry(registry)
+	server.SetLogger(logger)
+	server.Run()
 }
