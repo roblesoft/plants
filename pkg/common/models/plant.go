@@ -2,15 +2,19 @@ package models
 
 import (
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 )
 
 type Plant struct {
-	gorm.Model        // adds ID, created_at etc.
-	CommonName string `json:"common_name"`
-	Family     string `json:"family"`
-	PlantClass string `json:"plant_class"`
+	ID         uint           `gorm:"type:autoIncrement" json:"id"`
+	CommonName string         `json:"common_name"`
+	Family     string         `json:"family"`
+	PlantClass string         `json:"plant_class"`
+	CreatedAt  time.Time      `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt  time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
+	DeletedAt  gorm.DeletedAt `gorm:"index,->" json:"-"`
 }
 
 type PlantCollection []*Plant
