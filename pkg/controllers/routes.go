@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/gin-contrib/gzip"
 	"github.com/roblesoft/plants/pkg/common/repository"
+	"github.com/roblesoft/plants/pkg/controllers/api/v1/gardens"
 	"github.com/roblesoft/plants/pkg/controllers/api/v1/plants"
 	"github.com/roblesoft/plants/pkg/lib"
 	"go.uber.org/zap"
@@ -26,6 +27,15 @@ func (s *Server) registerRoutes() {
 		plantsRoutes.GET("/:id", plants.GetPlant)
 		plantsRoutes.PATCH("/:id", plants.UpdatePlant)
 		plantsRoutes.DELETE("/:id", plants.DeletePlant)
+	}
+
+	gardensRoutes := router.Group("/gardens")
+	{
+		gardensRoutes.GET("", gardens.GetGardens)
+		gardensRoutes.POST("", gardens.CreateGarden)
+		gardensRoutes.GET("/:id", gardens.GetGarden)
+		gardensRoutes.PATCH("/:id", gardens.UpdateGarden)
+		gardensRoutes.DELETE("/:id", gardens.DeleteGarden)
 	}
 
 	router.GET("/", func(c *gin.Context) {

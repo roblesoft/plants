@@ -19,10 +19,7 @@ func main() {
 
 	db := db.Init(dbUrl)
 
-	registry := repository.NewRepositoryRegistry(
-		db,
-		&repository.PlantRepository{},
-	)
+	registry := repository.NewRepositoryRegistry(db, &repository.PlantRepository{}, &repository.GardenRepository{})
 
 	server := controllers.InitServer()
 	server.SetRepositoryRegistry(registry)

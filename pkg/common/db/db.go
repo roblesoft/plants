@@ -16,6 +16,7 @@ func Init(url string) *gorm.DB {
 	}
 
 	db.AutoMigrate(&models.Plant{})
+	db.AutoMigrate(&models.Garden{})
 
 	return db
 }
