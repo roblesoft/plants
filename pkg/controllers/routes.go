@@ -34,6 +34,7 @@ func (s *Server) registerRoutes() {
 		gardensRoutes.GET("", gardens.GetGardens)
 		gardensRoutes.POST("", gardens.CreateGarden)
 		gardensRoutes.GET("/:id", gardens.GetGarden)
+		gardensRoutes.GET("/:id/plants", gardens.GetPlants)
 		gardensRoutes.PATCH("/:id", gardens.UpdateGarden)
 		gardensRoutes.DELETE("/:id", gardens.DeleteGarden)
 	}

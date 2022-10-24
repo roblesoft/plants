@@ -41,6 +41,26 @@ func GetGardens(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, &gardens)
 }
 
+func GetPlants(ctx *gin.Context) {
+	p := GardenParams{}
+	q := query{}
+
+	ctx.ShouldBindUri(&p)
+
+	if err := lib.Validate.Struct(p); err != nil {
+		lib.HandleError(err, ctx)
+		return
+	}
+
+	pc, err := GetGardenRepository(ctx).(*repository.GardenRepository).GetPlants(p.ID, q.Limit)
+	if err != nil {
+		lib.HandleError(err, ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, &pc)
+}
+
 func GetGarden(ctx *gin.Context) {
 	p := GardenParams{}
 

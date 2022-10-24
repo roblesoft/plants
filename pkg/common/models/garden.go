@@ -14,4 +14,4 @@ type Garden struct {
 	DeletedAt gorm.DeletedAt `gorm:"index,->" json:"-"`
 }
 
-type GardenCollection []*Plant
+type GardenCollection []*Garden

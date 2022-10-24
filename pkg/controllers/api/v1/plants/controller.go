@@ -12,6 +12,7 @@ import (
 
 type PlantParams struct {
 	ID         string `uri:"id" validate:"required"`
+	GardenId   uint   `json:"garden_id" validate:"required"`
 	CommonName string `json:"common_name"`
 	Family     string `json:"family"`
 	PlantClass string `json:"plant_class"`

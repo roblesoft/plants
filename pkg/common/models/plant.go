@@ -9,6 +9,7 @@ import (
 
 type Plant struct {
 	ID         uint           `gorm:"type:autoIncrement" json:"id"`
+	GardenId   uint           `json:"garden_id"`
 	CommonName string         `json:"common_name"`
 	Family     string         `json:"family"`
 	PlantClass string         `json:"plant_class"`
