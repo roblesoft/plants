@@ -11,8 +11,8 @@ import (
 )
 
 type GardenParams struct {
-	ID   string `uri:"id" validate:"required"`
-	Name string `json:"name"`
+	GardenID string `uri:"id" validate:"required"`
+	Name     string `json:"name"`
 }
 
 type query struct {
@@ -32,33 +32,13 @@ func GetGardens(ctx *gin.Context) {
 		return
 	}
 
-	gardens, err := GetGardenRepository(ctx).List(q.After, q.Limit)
+	gardens, err := GetGardenRepository(ctx).List(map[string]any{"after": q.After, "limit": q.Limit})
 	if err != nil {
 		lib.HandleError(err, ctx)
 		return
 	}
 
 	ctx.JSON(http.StatusOK, &gardens)
-}
-
-func GetPlants(ctx *gin.Context) {
-	p := GardenParams{}
-	q := query{}
-
-	ctx.ShouldBindUri(&p)
-
-	if err := lib.Validate.Struct(p); err != nil {
-		lib.HandleError(err, ctx)
-		return
-	}
-
-	pc, err := GetGardenRepository(ctx).(*repository.GardenRepository).GetPlants(p.ID, q.Limit)
-	if err != nil {
-		lib.HandleError(err, ctx)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, &pc)
 }
 
 func GetGarden(ctx *gin.Context) {
@@ -71,7 +51,7 @@ func GetGarden(ctx *gin.Context) {
 		return
 	}
 
-	garden, err := GetGardenRepository(ctx).Get(p.ID)
+	garden, err := GetGardenRepository(ctx).Get(p.GardenID)
 	if err != nil {
 		lib.HandleError(err, ctx)
 		return
@@ -117,13 +97,13 @@ func UpdateGarden(ctx *gin.Context) {
 
 	repository := GetGardenRepository(ctx)
 
-	_, err := repository.Update(p.ID, &body)
+	_, err := repository.Update(p.GardenID, &body)
 	if err != nil {
 		lib.HandleError(err, ctx)
 		return
 	}
 
-	garden, err := repository.Get(p.ID)
+	garden, err := repository.Get(p.GardenID)
 	if err != nil {
 		lib.HandleError(err, ctx)
 		return
@@ -142,7 +122,7 @@ func DeleteGarden(ctx *gin.Context) {
 		return
 	}
 
-	_, err := GetGardenRepository(ctx).Delete(p.ID)
+	_, err := GetGardenRepository(ctx).Delete(p.GardenID)
 	if err != nil {
 		lib.HandleError(err, ctx)
 		return

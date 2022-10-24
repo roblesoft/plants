@@ -3,14 +3,13 @@ package repository
 import (
 	"fmt"
 	"reflect"
-	"time"
 
 	"gorm.io/gorm"
 )
 
 type Repository interface {
 	Configure(*gorm.DB)
-	List(time.Time, int) (any, error)
+	List(map[string]any) (any, error)
 	Get(any) (any, error)
 	Create(any) (any, error)
 	Update(any, entity any) (bool, error)

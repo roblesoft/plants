@@ -1,9 +1,7 @@
 package repository
 
 import (
-	"fmt"
-	"time"
-
+	"github.com/gin-gonic/gin"
 	"github.com/roblesoft/plants/pkg/common/models"
 )
 
@@ -11,12 +9,24 @@ type PlantRepository struct {
 	GormRepository
 }
 
-func (r *PlantRepository) List(after time.Time, limit int) (any, error) {
-	var wc models.PlantCollection
-	order := "created_at"
-	err := r.db.Limit(limit).Order(order).Where(fmt.Sprintf("%v > ?", order), after).Limit(limit).Find(&wc).Error
+func GetGardenRepository(ctx *gin.Context) Repository {
+	return ctx.MustGet("RepositoryRegistry").(*RepositoryRegistry).MustRepository("GardenRepository")
+}
 
-	return wc, err
+func (r *PlantRepository) List(args map[string]any) (any, error) {
+	var pc models.PlantCollection
+
+	garden, err := GetGardenRepository(args["ctx"].(*gin.Context)).Get(args["gardenId"])
+
+	if err != nil {
+		return garden, err
+	}
+
+	order := "created_at"
+
+	err = r.db.Limit(args["limit"].(int)).Order(order).Where("garden_id = ?", &garden.(*models.Garden).ID).Limit(args["limit"].(int)).Find(&pc).Error
+
+	return pc, err
 }
 
 func (r *PlantRepository) Get(id any) (any, error) {

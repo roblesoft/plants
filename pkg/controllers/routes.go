@@ -20,23 +20,23 @@ func (s *Server) registerRoutes() {
 
 	router.NoRoute(lib.NoRoute)
 
-	plantsRoutes := router.Group("/plants")
-	{
-		plantsRoutes.GET("", plants.GetPlants)
-		plantsRoutes.POST("", plants.CreatePlant)
-		plantsRoutes.GET("/:id", plants.GetPlant)
-		plantsRoutes.PATCH("/:id", plants.UpdatePlant)
-		plantsRoutes.DELETE("/:id", plants.DeletePlant)
-	}
-
 	gardensRoutes := router.Group("/gardens")
 	{
 		gardensRoutes.GET("", gardens.GetGardens)
 		gardensRoutes.POST("", gardens.CreateGarden)
-		gardensRoutes.GET("/:id", gardens.GetGarden)
-		gardensRoutes.GET("/:id/plants", gardens.GetPlants)
-		gardensRoutes.PATCH("/:id", gardens.UpdateGarden)
-		gardensRoutes.DELETE("/:id", gardens.DeleteGarden)
+		garden := gardensRoutes.Group(":GardenId")
+
+		garden.GET("/", gardens.GetGarden)
+		garden.PATCH("/", gardens.UpdateGarden)
+		garden.DELETE("/", gardens.DeleteGarden)
+		plantsRoutes := garden.Group("plants")
+		{
+			plantsRoutes.GET("", plants.GetPlants)
+			plantsRoutes.POST("", plants.CreatePlant)
+			plantsRoutes.GET("/:id", plants.GetPlant)
+			plantsRoutes.PATCH("/:id", plants.UpdatePlant)
+			plantsRoutes.DELETE("/:id", plants.DeletePlant)
+		}
 	}
 
 	router.GET("/", func(c *gin.Context) {

@@ -18,6 +18,11 @@ type PlantParams struct {
 	PlantClass string `json:"plant_class"`
 }
 
+type GardenParams struct {
+	GardenId string `uri:"GardenId" validate:"required"`
+	Name     string `json:"name"`
+}
+
 type query struct {
 	After time.Time `form:"after"`
 	Limit int       `form:"limit,default=10" binding:"gte=1,lte=100"`
@@ -28,20 +33,23 @@ func GetPlantRepository(ctx *gin.Context) repository.Repository {
 }
 
 func GetPlants(ctx *gin.Context) {
-	var q = query{}
+	p := GardenParams{}
+	q := query{}
 
-	if err := ctx.ShouldBindQuery(&q); err != nil {
+	ctx.ShouldBindUri(&p)
+
+	if err := lib.Validate.Struct(p); err != nil {
 		lib.HandleError(err, ctx)
 		return
 	}
 
-	plants, err := GetPlantRepository(ctx).List(q.After, q.Limit)
+	pc, err := GetPlantRepository(ctx).List(map[string]any{"after": q.After, "limit": q.Limit, "gardenId": p.GardenId, "ctx": ctx})
 	if err != nil {
 		lib.HandleError(err, ctx)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, &plants)
+	ctx.JSON(http.StatusOK, &pc)
 }
 
 func GetPlant(ctx *gin.Context) {
