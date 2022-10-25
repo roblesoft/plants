@@ -53,16 +53,24 @@ func GetPlants(ctx *gin.Context) {
 }
 
 func GetPlant(ctx *gin.Context) {
-	p := PlantParams{}
+	gp := GardenParams{}
+	pp := PlantParams{}
 
-	ctx.ShouldBindUri(&p)
+	ctx.ShouldBindUri(&gp)
 
-	if err := lib.Validate.Struct(p); err != nil {
+	if err := lib.Validate.Struct(gp); err != nil {
 		lib.HandleError(err, ctx)
 		return
 	}
 
-	plant, err := GetPlantRepository(ctx).Get(p.ID)
+	ctx.ShouldBindUri(&pp)
+
+	if err := lib.Validate.Struct(pp); err != nil {
+		lib.HandleError(err, ctx)
+		return
+	}
+
+	plant, err := GetPlantRepository(ctx).Get(map[string]any{"plantId": pp.ID, "gardenId": gp.GardenId, "ctx": ctx})
 	if err != nil {
 		lib.HandleError(err, ctx)
 		return

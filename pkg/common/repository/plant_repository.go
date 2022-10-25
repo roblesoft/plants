@@ -29,12 +29,18 @@ func (r *PlantRepository) List(args map[string]any) (any, error) {
 	return pc, err
 }
 
-func (r *PlantRepository) Get(id any) (any, error) {
-	var w *models.Plant
+func (r *PlantRepository) Get(args any) (any, error) {
+	var plant *models.Plant
 
-	err := r.db.Where("id = ?", id).First(&w).Error
+	garden, err := GetGardenRepository(args.(map[string]any)["ctx"].(*gin.Context)).Get(args.(map[string]any)["gardenId"])
 
-	return w, err
+	if err != nil {
+		return garden, err
+	}
+
+	err = r.db.Where("garden_id = ? AND id = ?", &garden.(*models.Garden).ID, args.(map[string]any)["plantId"]).First(&plant).Error
+
+	return plant, err
 }
 
 func (r *PlantRepository) Create(entity any) (any, error) {
