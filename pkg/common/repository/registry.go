@@ -12,7 +12,7 @@ type Repository interface {
 	List(map[string]any) (any, error)
 	Get(any) (any, error)
 	Create(any) (any, error)
-	Update(any, entity any) (bool, error)
+	Update(any) (any, error)
 	Delete(any) (bool, error)
 }
 

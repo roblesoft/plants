@@ -43,26 +43,50 @@ func (r *PlantRepository) Get(args any) (any, error) {
 	return plant, err
 }
 
-func (r *PlantRepository) Create(entity any) (any, error) {
-	w := entity.(*models.Plant)
+func (r *PlantRepository) Create(args any) (any, error) {
+	plant := args.(map[string]any)["entity"].(*models.Plant)
 
-	err := r.db.Create(w).Error
+	garden, err := GetGardenRepository(args.(map[string]any)["ctx"].(*gin.Context)).Get(args.(map[string]any)["gardenId"])
 
-	return w, err
+	if err != nil {
+		return garden, err
+	}
+
+	plant.GardenId = garden.(*models.Garden).ID
+	err = r.db.Create(plant).Error
+
+	return plant, err
 }
 
-func (r *PlantRepository) Update(id any, entity any) (bool, error) {
-	w := entity.(*models.Plant)
+func (r *PlantRepository) Update(args any) (any, error) {
+	body := args.(map[string]any)["entity"].(*models.Plant)
+	garden, err := GetGardenRepository(args.(map[string]any)["ctx"].(*gin.Context)).Get(args.(map[string]any)["gardenId"])
 
-	if err := r.db.Model(w).Where("id = ?", id).Updates(w).Error; err != nil {
+	if err != nil {
 		return false, err
 	}
 
-	return true, nil
+	if err := r.db.Model(&body).Where("garden_id = ? AND id = ?", &garden.(*models.Garden).ID, args.(map[string]any)["plantId"]).Updates(&body).Error; err != nil {
+		return false, err
+	}
+
+	plant, err := r.Get(map[string]any{"plantId": args.(map[string]any)["plantId"], "gardenId": &garden.(*models.Garden).ID, "ctx": args.(map[string]any)["ctx"].(*gin.Context)})
+
+	if err != nil {
+		return false, err
+	}
+
+	return plant, nil
 }
 
-func (r *PlantRepository) Delete(id any) (bool, error) {
-	if err := r.db.Delete(&models.Plant{}, "id = ?", id).Error; err != nil {
+func (r *PlantRepository) Delete(args any) (bool, error) {
+	garden, err := GetGardenRepository(args.(map[string]any)["ctx"].(*gin.Context)).Get(args.(map[string]any)["gardenId"])
+
+	if err != nil {
+		return false, err
+	}
+
+	if err = r.db.Delete(&models.Plant{}, "garden_id = ? AND id = ?", &garden.(*models.Garden).ID, args.(map[string]any)["plantId"]).Error; err != nil {
 		return false, err
 	}
 

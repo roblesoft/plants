@@ -80,14 +80,22 @@ func GetPlant(ctx *gin.Context) {
 }
 
 func CreatePlant(ctx *gin.Context) {
+	gp := GardenParams{}
 	body := models.Plant{}
+
+	ctx.ShouldBindUri(&gp)
+
+	if err := lib.Validate.Struct(gp); err != nil {
+		lib.HandleError(err, ctx)
+		return
+	}
 
 	if err := ctx.BindJSON(&body); err != nil {
 		lib.HandleError(err, ctx)
 		return
 	}
 
-	entity, err := GetPlantRepository(ctx).Create(&body)
+	entity, err := GetPlantRepository(ctx).Create(map[string]any{"entity": &body, "gardenId": gp.GardenId, "ctx": ctx})
 	if err != nil {
 		lib.HandleError(err, ctx)
 		return
@@ -98,7 +106,16 @@ func CreatePlant(ctx *gin.Context) {
 }
 
 func UpdatePlant(ctx *gin.Context) {
+	gp := GardenParams{}
 	p := PlantParams{}
+	body := models.Plant{}
+
+	ctx.ShouldBindUri(&gp)
+
+	if err := lib.Validate.Struct(gp); err != nil {
+		lib.HandleError(err, ctx)
+		return
+	}
 
 	ctx.ShouldBindUri(&p)
 
@@ -107,8 +124,6 @@ func UpdatePlant(ctx *gin.Context) {
 		return
 	}
 
-	body := models.Plant{}
-
 	if err := ctx.BindJSON(&body); err != nil {
 		lib.HandleError(err, ctx)
 		return
@@ -116,13 +131,7 @@ func UpdatePlant(ctx *gin.Context) {
 
 	repository := GetPlantRepository(ctx)
 
-	_, err := repository.Update(p.ID, &body)
-	if err != nil {
-		lib.HandleError(err, ctx)
-		return
-	}
-
-	plant, err := repository.Get(p.ID)
+	plant, err := repository.Update(map[string]any{"entity": &body, "gardenId": gp.GardenId, "plantId": p.ID, "ctx": ctx})
 	if err != nil {
 		lib.HandleError(err, ctx)
 		return
@@ -132,16 +141,24 @@ func UpdatePlant(ctx *gin.Context) {
 }
 
 func DeletePlant(ctx *gin.Context) {
-	p := PlantParams{}
+	gp := GardenParams{}
+	pp := PlantParams{}
 
-	ctx.ShouldBindUri(&p)
+	ctx.ShouldBindUri(&gp)
 
-	if err := lib.Validate.Struct(p); err != nil {
+	if err := lib.Validate.Struct(gp); err != nil {
 		lib.HandleError(err, ctx)
 		return
 	}
 
-	_, err := GetPlantRepository(ctx).Delete(p.ID)
+	ctx.ShouldBindUri(&pp)
+
+	if err := lib.Validate.Struct(pp); err != nil {
+		lib.HandleError(err, ctx)
+		return
+	}
+
+	_, err := GetPlantRepository(ctx).Delete(map[string]any{"plantId": pp.ID, "gardenId": gp.GardenId, "ctx": ctx})
 	if err != nil {
 		lib.HandleError(err, ctx)
 		return

@@ -97,7 +97,7 @@ func UpdateGarden(ctx *gin.Context) {
 
 	repository := GetGardenRepository(ctx)
 
-	_, err := repository.Update(p.GardenID, &body)
+	_, err := repository.Update(map[string]any{"entity": &body, "id": p.GardenID})
 	if err != nil {
 		lib.HandleError(err, ctx)
 		return

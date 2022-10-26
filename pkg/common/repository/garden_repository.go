@@ -34,10 +34,10 @@ func (r *GardenRepository) Create(entity any) (any, error) {
 	return w, err
 }
 
-func (r *GardenRepository) Update(id any, entity any) (bool, error) {
-	w := entity.(*models.Garden)
+func (r *GardenRepository) Update(args any) (any, error) {
+	w := args.(map[string]any)["entity"].(*models.Plant)
 
-	if err := r.db.Model(w).Where("id = ?", id).Updates(w).Error; err != nil {
+	if err := r.db.Model(w).Where("id = ?", args.(map[string]any)["id"]).Updates(w).Error; err != nil {
 		return false, err
 	}
 
