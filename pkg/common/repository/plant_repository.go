@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/roblesoft/plants/pkg/common/models"
 )
@@ -86,9 +88,16 @@ func (r *PlantRepository) Delete(args any) (bool, error) {
 		return false, err
 	}
 
-	if err = r.db.Delete(&models.Plant{}, "garden_id = ? AND id = ?", &garden.(*models.Garden).ID, args.(map[string]any)["plantId"]).Error; err != nil {
+	plant, err := r.Get(map[string]any{"plantId": args.(map[string]any)["plantId"], "gardenId": &garden.(*models.Garden).ID, "ctx": args.(map[string]any)["ctx"].(*gin.Context)})
+
+	if err != nil {
 		return false, err
 	}
 
+	if err = r.db.Delete(plant).Error; err != nil {
+		return false, err
+	}
+
+	fmt.Print("fsdfasdf")
 	return true, nil
 }

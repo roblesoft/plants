@@ -35,7 +35,7 @@ func (r *GardenRepository) Create(entity any) (any, error) {
 }
 
 func (r *GardenRepository) Update(args any) (any, error) {
-	w := args.(map[string]any)["entity"].(*models.Plant)
+	w := args.(map[string]any)["entity"].(*models.Garden)
 
 	if err := r.db.Model(w).Where("id = ?", args.(map[string]any)["id"]).Updates(w).Error; err != nil {
 		return false, err
@@ -45,7 +45,14 @@ func (r *GardenRepository) Update(args any) (any, error) {
 }
 
 func (r *GardenRepository) Delete(id any) (bool, error) {
-	if err := r.db.Delete(&models.Garden{}, "id = ?", id).Error; err != nil {
+
+	garden, err := r.Get(id)
+
+	if err != nil {
+		return false, err
+	}
+
+	if err := r.db.Delete(garden).Error; err != nil {
 		return false, err
 	}
 

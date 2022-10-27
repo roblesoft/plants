@@ -11,7 +11,7 @@ import (
 )
 
 type GardenParams struct {
-	GardenID string `uri:"id" validate:"required"`
+	GardenID string `uri:"GardenId" validate:"required"`
 	Name     string `json:"name"`
 }
 
