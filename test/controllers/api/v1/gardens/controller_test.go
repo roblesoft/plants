@@ -1,34 +1,22 @@
-package gardens
+package main_test
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/roblesoft/plants/pkg/common/db"
-	"github.com/roblesoft/plants/pkg/common/repository"
-	"github.com/roblesoft/plants/pkg/controllers"
-	"github.com/spf13/viper"
+	"github.com/roblesoft/plants/pkg/controllers/api/v1/gardens"
+	"github.com/roblesoft/plants/test/helpers"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPingRoute(t *testing.T) {
-	viper.SetConfigFile("../../../../../pkg/common/envs/.env")
-	viper.ReadInConfig()
-	dbUrl := viper.Get("DB_URL").(string)
-
-	db := db.Init(dbUrl)
-
-	registry := repository.NewRepositoryRegistry(db, &repository.PlantRepository{}, &repository.GardenRepository{})
-
-	server := controllers.InitServer()
-	server.SetRepositoryRegistry(registry)
-
+	r := helpers.SetUpRouter()
+	router := r.getRouter()
+	router.GET("/", gardens.GetGardens)
+	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
-	fmt.Print(server)
-	// req, _ := http.NewRequest(http.MethodGet, "/", nil)
-	// server.router.ServeHTTP(w, req)
-
+	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 }
