@@ -5,6 +5,7 @@ import (
 	"github.com/roblesoft/plants/pkg/common/db"
 	"github.com/roblesoft/plants/pkg/common/repository"
 	"github.com/spf13/viper"
+	"gorm.io/gorm"
 )
 
 type Server struct {
@@ -12,6 +13,12 @@ type Server struct {
 }
 
 var Router *gin.Engine
+var ContextServer *Server
+var DB *gorm.DB
+
+func GetGardenRepository(ctx *gin.Context) repository.Repository {
+	return ctx.MustGet("RepositoryRegistry").(*repository.RepositoryRegistry).MustRepository("GardenRepository")
+}
 
 func InitServer() *Server {
 	server := &Server{}
@@ -31,6 +38,7 @@ func (s *Server) getRouter() *gin.Engine {
 }
 
 func SetUpRouter() {
+	gin.SetMode(gin.TestMode)
 	viper.SetConfigFile("../../../../common/envs/.env")
 	viper.ReadInConfig()
 	dbUrl := viper.Get("DB_URL").(string)
@@ -39,4 +47,5 @@ func SetUpRouter() {
 	server := InitServer()
 	server.SetRepositoryRegistry(registry)
 	Router = server.router
+	DB = db
 }
