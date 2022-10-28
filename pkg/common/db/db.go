@@ -20,3 +20,26 @@ func Init(url string) *gorm.DB {
 
 	return db
 }
+
+// type Database struct {
+// 	db *gorm.DB
+// }
+
+// var DB *gorm.DB
+
+// func Init(url string) {
+// 	if DB != nil {
+// 		return
+// 	}
+
+// 	var err error
+// 	database, err := gorm.Open(postgres.Open(url), &gorm.Config{})
+
+// 	if err != nil {
+// 		log.Fatalln(err)
+// 	}
+// 	database.AutoMigrate(&models.Plant{})
+// 	database.AutoMigrate(&models.Garden{})
+
+// 	DB = database
+// }
