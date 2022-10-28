@@ -38,7 +38,7 @@ func TestGetGardenSuccessfully(t *testing.T) {
 	r := mock.Router
 	body := models.Garden{Name: "Uriel"}
 
-	r.GET("/gardens/2", GetGarden)
+	r.GET("/gardens/:GardenId", GetGarden)
 
 	w := httptest.NewRecorder()
 	ctx, _ := gin.CreateTestContext(w)
