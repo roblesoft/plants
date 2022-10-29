@@ -19,28 +19,20 @@ func TestGetGardens(t *testing.T) {
 	mock.SetUpRouter()
 	r := mock.Router
 	r.GET("/gardens", GetGardens)
-	req, _ := http.NewRequest("GET", "/gardens", nil)
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
+
+	t.Run("http status ok", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/gardens", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
 }
 
-func TestGetGardenNotFound(t *testing.T) {
+func TestGetGarden(t *testing.T) {
 	mock.SetUpRouter()
 	r := mock.Router
-	r.GET("/gardens", GetGarden)
-	req, _ := http.NewRequest("GET", "/gardens/1", nil)
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusNotFound, w.Code)
-}
-
-func TestGetGardenSuccessfully(t *testing.T) {
-	mock.SetUpRouter()
-	r := mock.Router
-	body := models.Garden{Name: "Uriel"}
-
 	r.GET("/gardens/:GardenId", GetGarden)
+	body := models.Garden{Name: "Uriel"}
 
 	w := httptest.NewRecorder()
 	ctx, _ := gin.CreateTestContext(w)
@@ -48,13 +40,23 @@ func TestGetGardenSuccessfully(t *testing.T) {
 	ctx.Set("RepositoryRegistry", registry)
 	entity, _ := GetGardenRepository(ctx).Create(&body)
 
-	req, _ := http.NewRequest("GET", fmt.Sprintf("/gardens/%d", entity.(*models.Garden).ID), nil)
-	r.ServeHTTP(w, req)
-	assert.NotNil(t, entity)
-	assert.Equal(t, http.StatusOK, w.Code)
+	t.Run("http status ok", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", fmt.Sprintf("/gardens/%d", entity.(*models.Garden).ID), nil)
+		r.ServeHTTP(w, req)
+		assert.NotNil(t, entity)
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
+
+	t.Run("http not found", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/gardens/0", nil)
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
 }
 
-func TestUpdateGardenSuccessfully(t *testing.T) {
+func TestUpdateGarden(t *testing.T) {
 	mock.SetUpRouter()
 	registry := repository.NewRepositoryRegistry(mock.DB, &repository.GardenRepository{})
 	r := mock.Router
@@ -69,14 +71,16 @@ func TestUpdateGardenSuccessfully(t *testing.T) {
 	ctx.Set("RepositoryRegistry", registry)
 	createdGarden, _ := GetGardenRepository(ctx).Create(&garden)
 
-	jsonValue, _ := json.Marshal(body)
-	req, _ := http.NewRequest("PATCH", fmt.Sprintf("/gardens/%d", createdGarden.(*models.Garden).ID), bytes.NewBuffer(jsonValue))
-	r.ServeHTTP(w, req)
-	if err := json.Unmarshal(w.Body.Bytes(), &garden); err != nil { // Parse []byte to go struct pointer
-		fmt.Println("Can not unmarshal JSON")
-	}
-	assert.Equal(t, garden.Name, body.Name)
-	assert.Equal(t, http.StatusOK, w.Code)
+	t.Run("http status ok", func(t *testing.T) {
+		jsonValue, _ := json.Marshal(body)
+		req, _ := http.NewRequest("PATCH", fmt.Sprintf("/gardens/%d", createdGarden.(*models.Garden).ID), bytes.NewBuffer(jsonValue))
+		r.ServeHTTP(w, req)
+		if err := json.Unmarshal(w.Body.Bytes(), &garden); err != nil { // Parse []byte to go struct pointer
+			fmt.Println("Can not unmarshal JSON")
+		}
+		assert.Equal(t, garden.Name, body.Name)
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
 }
 
 func TestDeleteGardenSuccessfully(t *testing.T) {
@@ -92,7 +96,9 @@ func TestDeleteGardenSuccessfully(t *testing.T) {
 	ctx.Set("RepositoryRegistry", registry)
 	entity, _ := GetGardenRepository(ctx).Create(&body)
 
-	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/gardens/%d", entity.(*models.Garden).ID), nil)
-	r.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusNoContent, w.Code)
+	t.Run("http status no content", func(t *testing.T) {
+		req, _ := http.NewRequest("DELETE", fmt.Sprintf("/gardens/%d", entity.(*models.Garden).ID), nil)
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusNoContent, w.Code)
+	})
 }

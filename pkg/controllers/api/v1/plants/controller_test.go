@@ -11,7 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/roblesoft/plants/pkg/common/models"
 	"github.com/roblesoft/plants/pkg/common/repository"
-	"github.com/roblesoft/plants/pkg/controllers/api/v1/gardens"
 	"github.com/roblesoft/plants/pkg/mock"
 	"github.com/stretchr/testify/assert"
 )
@@ -29,27 +28,20 @@ func TestGetPlants(t *testing.T) {
 	ctx.Set("RepositoryRegistry", registry)
 	entity, _ := repository.GetGardenRepository(ctx).Create(&body)
 
-	r.GET("/gardens", gardens.GetGardens)
-	req, _ := http.NewRequest("GET", fmt.Sprintf("/gardens/%d/plants", entity.(*models.Garden).ID), nil)
-	r.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
+	t.Run("http status ok", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", fmt.Sprintf("/gardens/%d/plants", entity.(*models.Garden).ID), nil)
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
+	t.Run("http status not found", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/gardens/0/plants", nil)
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
 }
 
-func TestGetPlantsGardenNotFound(t *testing.T) {
-	mock.SetUpRouter()
-	r := mock.Router
-
-	r.GET("/gardens/:GardenId/plants", GetPlants)
-
-	w := httptest.NewRecorder()
-
-	r.GET("/gardens", gardens.GetGardens)
-	req, _ := http.NewRequest("GET", "/gardens/0/plants", nil)
-	r.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusNotFound, w.Code)
-}
-
-func TestGetPlantSuccessfully(t *testing.T) {
+func TestGetPlant(t *testing.T) {
 	mock.SetUpRouter()
 	r := mock.Router
 	garden_body := models.Garden{Name: "Uriel"}
@@ -65,12 +57,20 @@ func TestGetPlantSuccessfully(t *testing.T) {
 	garden, _ := repository.GetGardenRepository(ctx).Create(&garden_body)
 	plant, _ := mock.GetPlantRepository(ctx).Create(map[string]any{"entity": &plant_body, "gardenId": garden.(*models.Garden).ID, "ctx": ctx})
 
-	req, _ := http.NewRequest("GET", fmt.Sprintf("/gardens/%d/plants/%d", garden.(*models.Garden).ID, plant.(*models.Plant).ID), nil)
-	r.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
+	t.Run("http status ok", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", fmt.Sprintf("/gardens/%d/plants/%d", garden.(*models.Garden).ID, plant.(*models.Plant).ID), nil)
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
+	t.Run("http status not found", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", fmt.Sprintf("/gardens/%d/plants/0", garden.(*models.Garden).ID), nil)
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
 }
 
-func TestPostPlantSuccessfully(t *testing.T) {
+func TestPostPlant(t *testing.T) {
 	mock.SetUpRouter()
 	r := mock.Router
 	garden_body := models.Garden{Name: "Uriel"}
@@ -85,18 +85,20 @@ func TestPostPlantSuccessfully(t *testing.T) {
 
 	garden, _ := repository.GetGardenRepository(ctx).Create(&garden_body)
 
-	jsonValue, _ := json.Marshal(plant_body)
-	req, _ := http.NewRequest("POST", fmt.Sprintf("/gardens/%d/plants", garden.(*models.Garden).ID), bytes.NewBuffer(jsonValue))
-	r.ServeHTTP(w, req)
-	plant := models.Plant{}
-	if err := json.Unmarshal(w.Body.Bytes(), &plant); err != nil { // Parse []byte to go struct pointer
-		fmt.Println("Can not unmarshal JSON")
-	}
-	assert.Equal(t, plant.CommonName, plant_body.CommonName)
-	assert.Equal(t, http.StatusCreated, w.Code)
+	t.Run("http status created", func(t *testing.T) {
+		jsonValue, _ := json.Marshal(plant_body)
+		req, _ := http.NewRequest("POST", fmt.Sprintf("/gardens/%d/plants", garden.(*models.Garden).ID), bytes.NewBuffer(jsonValue))
+		r.ServeHTTP(w, req)
+		plant := models.Plant{}
+		if err := json.Unmarshal(w.Body.Bytes(), &plant); err != nil {
+			fmt.Println("Can not unmarshal JSON")
+		}
+		assert.Equal(t, plant.CommonName, plant_body.CommonName)
+		assert.Equal(t, http.StatusCreated, w.Code)
+	})
 }
 
-func TestUpdatePlantSuccessfully(t *testing.T) {
+func TestUpdatePlant(t *testing.T) {
 	mock.SetUpRouter()
 	r := mock.Router
 	garden_body := models.Garden{Name: "Uriel"}
@@ -112,17 +114,18 @@ func TestUpdatePlantSuccessfully(t *testing.T) {
 
 	garden, _ := repository.GetGardenRepository(ctx).Create(&garden_body)
 	plant, _ := mock.GetPlantRepository(ctx).Create(map[string]any{"entity": &plant_body, "gardenId": garden.(*models.Garden).ID, "ctx": ctx})
-	fmt.Print(plant)
 
-	jsonValue, _ := json.Marshal(updatedPlantBody)
-	req, _ := http.NewRequest("PATCH", fmt.Sprintf("/gardens/%d/plants/%d", garden.(*models.Garden).ID, plant.(*models.Plant).ID), bytes.NewBuffer(jsonValue))
-	r.ServeHTTP(w, req)
+	t.Run("http status ok", func(t *testing.T) {
+		jsonValue, _ := json.Marshal(updatedPlantBody)
+		req, _ := http.NewRequest("PATCH", fmt.Sprintf("/gardens/%d/plants/%d", garden.(*models.Garden).ID, plant.(*models.Plant).ID), bytes.NewBuffer(jsonValue))
+		r.ServeHTTP(w, req)
 
-	if err := json.Unmarshal(w.Body.Bytes(), &plant); err != nil {
-		fmt.Println("Can not unmarshal JSON")
-	}
-	assert.Equal(t, plant.(*models.Plant).CommonName, updatedPlantBody.CommonName)
-	assert.Equal(t, http.StatusOK, w.Code)
+		if err := json.Unmarshal(w.Body.Bytes(), &plant); err != nil {
+			fmt.Println("Can not unmarshal JSON")
+		}
+		assert.Equal(t, plant.(*models.Plant).CommonName, updatedPlantBody.CommonName)
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
 }
 
 func TestDeletePlantSuccessfully(t *testing.T) {
@@ -141,7 +144,9 @@ func TestDeletePlantSuccessfully(t *testing.T) {
 	garden, _ := repository.GetGardenRepository(ctx).Create(&garden_body)
 	plant, _ := mock.GetPlantRepository(ctx).Create(map[string]any{"entity": &plant_body, "gardenId": garden.(*models.Garden).ID, "ctx": ctx})
 
-	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/gardens/%d/plants/%d", garden.(*models.Garden).ID, plant.(*models.Plant).ID), nil)
-	r.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusNoContent, w.Code)
+	t.Run("http no content", func(t *testing.T) {
+		req, _ := http.NewRequest("DELETE", fmt.Sprintf("/gardens/%d/plants/%d", garden.(*models.Garden).ID, plant.(*models.Plant).ID), nil)
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusNoContent, w.Code)
+	})
 }
