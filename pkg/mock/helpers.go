@@ -20,6 +20,10 @@ func GetGardenRepository(ctx *gin.Context) repository.Repository {
 	return ctx.MustGet("RepositoryRegistry").(*repository.RepositoryRegistry).MustRepository("GardenRepository")
 }
 
+func GetPlantRepository(ctx *gin.Context) repository.Repository {
+	return ctx.MustGet("RepositoryRegistry").(*repository.RepositoryRegistry).MustRepository("PlantRepository")
+}
+
 func InitServer() *Server {
 	server := &Server{}
 	server.router = gin.Default()
@@ -39,7 +43,7 @@ func (s *Server) getRouter() *gin.Engine {
 
 func SetUpRouter() {
 	gin.SetMode(gin.TestMode)
-	viper.SetConfigFile("../../../../common/envs/.env")
+	viper.SetConfigFile("../../../../common/envs/.test.env")
 	viper.ReadInConfig()
 	dbUrl := viper.Get("DB_URL").(string)
 	db := db.Init(dbUrl)

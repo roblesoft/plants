@@ -35,74 +35,113 @@ func TestGetPlants(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
-func TestGetPlantNotFound(t *testing.T) {
+func TestGetPlantsGardenNotFound(t *testing.T) {
 	mock.SetUpRouter()
 	r := mock.Router
-	r.GET("/gardens", gardens.GetGarden)
-	req, _ := http.NewRequest("GET", "/gardens/1", nil)
+
+	r.GET("/gardens/:GardenId/plants", GetPlants)
+
 	w := httptest.NewRecorder()
+
+	r.GET("/gardens", gardens.GetGardens)
+	req, _ := http.NewRequest("GET", "/gardens/0/plants", nil)
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
-func TestGetGardenSuccessfully(t *testing.T) {
+func TestGetPlantSuccessfully(t *testing.T) {
 	mock.SetUpRouter()
 	r := mock.Router
-	body := models.Garden{Name: "Uriel"}
+	garden_body := models.Garden{Name: "Uriel"}
+	plant_body := models.Plant{CommonName: "Monstera"}
 
-	r.GET("/gardens/:GardenId", gardens.GetGarden)
+	r.GET("/gardens/:GardenId/plants/:id", GetPlant)
 
 	w := httptest.NewRecorder()
 	ctx, _ := gin.CreateTestContext(w)
-	registry := repository.NewRepositoryRegistry(mock.DB, &repository.GardenRepository{})
+	registry := repository.NewRepositoryRegistry(mock.DB, &repository.GardenRepository{}, &repository.PlantRepository{})
 	ctx.Set("RepositoryRegistry", registry)
-	entity, _ := repository.GetGardenRepository(ctx).Create(&body)
 
-	req, _ := http.NewRequest("GET", fmt.Sprintf("/gardens/%d", entity.(*models.Garden).ID), nil)
+	garden, _ := repository.GetGardenRepository(ctx).Create(&garden_body)
+	plant, _ := mock.GetPlantRepository(ctx).Create(map[string]any{"entity": &plant_body, "gardenId": garden.(*models.Garden).ID, "ctx": ctx})
+
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/gardens/%d/plants/%d", garden.(*models.Garden).ID, plant.(*models.Plant).ID), nil)
 	r.ServeHTTP(w, req)
-	assert.NotNil(t, entity)
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
-func TestUpdateGardenSuccessfully(t *testing.T) {
+func TestPostPlantSuccessfully(t *testing.T) {
 	mock.SetUpRouter()
-	registry := repository.NewRepositoryRegistry(mock.DB, &repository.GardenRepository{})
 	r := mock.Router
-	garden := models.Garden{Name: "Uriel"}
-	body := models.Garden{Name: "Uriel Update"}
+	garden_body := models.Garden{Name: "Uriel"}
+	plant_body := models.Plant{CommonName: "Monstera"}
 
-	r.PATCH("/gardens/:GardenId", gardens.UpdateGarden)
+	r.POST("/gardens/:GardenId/plants", CreatePlant)
 
 	w := httptest.NewRecorder()
-
 	ctx, _ := gin.CreateTestContext(w)
+	registry := repository.NewRepositoryRegistry(mock.DB, &repository.GardenRepository{}, &repository.PlantRepository{})
 	ctx.Set("RepositoryRegistry", registry)
-	createdGarden, _ := repository.GetGardenRepository(ctx).Create(&garden)
 
-	jsonValue, _ := json.Marshal(body)
-	req, _ := http.NewRequest("PATCH", fmt.Sprintf("/gardens/%d", createdGarden.(*models.Garden).ID), bytes.NewBuffer(jsonValue))
+	garden, _ := repository.GetGardenRepository(ctx).Create(&garden_body)
+
+	jsonValue, _ := json.Marshal(plant_body)
+	req, _ := http.NewRequest("POST", fmt.Sprintf("/gardens/%d/plants", garden.(*models.Garden).ID), bytes.NewBuffer(jsonValue))
 	r.ServeHTTP(w, req)
-	if err := json.Unmarshal(w.Body.Bytes(), &garden); err != nil { // Parse []byte to go struct pointer
+	plant := models.Plant{}
+	if err := json.Unmarshal(w.Body.Bytes(), &plant); err != nil { // Parse []byte to go struct pointer
 		fmt.Println("Can not unmarshal JSON")
 	}
-	assert.Equal(t, garden.Name, body.Name)
-	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, plant.CommonName, plant_body.CommonName)
+	assert.Equal(t, http.StatusCreated, w.Code)
 }
 
-func TestDeleteGardenSuccessfully(t *testing.T) {
+func TestUpdatePlantSuccessfully(t *testing.T) {
 	mock.SetUpRouter()
 	r := mock.Router
-	body := models.Garden{Name: "Uriel"}
+	garden_body := models.Garden{Name: "Uriel"}
+	plant_body := models.Plant{CommonName: "Monstera"}
+	updatedPlantBody := models.Plant{CommonName: "Updated Monstera"}
 
-	r.DELETE("/gardens/:GardenId", gardens.DeleteGarden)
+	r.PATCH("/gardens/:GardenId/plants/:id", UpdatePlant)
 
 	w := httptest.NewRecorder()
 	ctx, _ := gin.CreateTestContext(w)
-	registry := repository.NewRepositoryRegistry(mock.DB, &repository.GardenRepository{})
+	registry := repository.NewRepositoryRegistry(mock.DB, &repository.GardenRepository{}, &repository.PlantRepository{})
 	ctx.Set("RepositoryRegistry", registry)
-	entity, _ := repository.GetGardenRepository(ctx).Create(&body)
 
-	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/gardens/%d", entity.(*models.Garden).ID), nil)
+	garden, _ := repository.GetGardenRepository(ctx).Create(&garden_body)
+	plant, _ := mock.GetPlantRepository(ctx).Create(map[string]any{"entity": &plant_body, "gardenId": garden.(*models.Garden).ID, "ctx": ctx})
+	fmt.Print(plant)
+
+	jsonValue, _ := json.Marshal(updatedPlantBody)
+	req, _ := http.NewRequest("PATCH", fmt.Sprintf("/gardens/%d/plants/%d", garden.(*models.Garden).ID, plant.(*models.Plant).ID), bytes.NewBuffer(jsonValue))
+	r.ServeHTTP(w, req)
+
+	if err := json.Unmarshal(w.Body.Bytes(), &plant); err != nil {
+		fmt.Println("Can not unmarshal JSON")
+	}
+	assert.Equal(t, plant.(*models.Plant).CommonName, updatedPlantBody.CommonName)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestDeletePlantSuccessfully(t *testing.T) {
+	mock.SetUpRouter()
+	r := mock.Router
+	garden_body := models.Garden{Name: "Uriel"}
+	plant_body := models.Plant{CommonName: "Monstera"}
+
+	r.DELETE("/gardens/:GardenId/plants/:id", DeletePlant)
+
+	w := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(w)
+	registry := repository.NewRepositoryRegistry(mock.DB, &repository.GardenRepository{}, &repository.PlantRepository{})
+	ctx.Set("RepositoryRegistry", registry)
+
+	garden, _ := repository.GetGardenRepository(ctx).Create(&garden_body)
+	plant, _ := mock.GetPlantRepository(ctx).Create(map[string]any{"entity": &plant_body, "gardenId": garden.(*models.Garden).ID, "ctx": ctx})
+
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/gardens/%d/plants/%d", garden.(*models.Garden).ID, plant.(*models.Plant).ID), nil)
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusNoContent, w.Code)
 }
